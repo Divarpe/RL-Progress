@@ -81,6 +81,7 @@ class GridWorldEnv():
     def get_action_dict(self):
         return self.action_dict
     
+    ###############################################################################################
     def next_state(self, current_state, action):
         """
         Next State
@@ -100,8 +101,6 @@ class GridWorldEnv():
         max_cell_value = self.grid_dimension
         current_action =  self.action_dict[action]
 
-        #Case we are at row 0 and want to go up
-        #Case we are at col 0 and want to go left
         if 'UP' == current_action: next_row = max(0, current_row - 1)
         elif 'DOWN' == current_action: next_row = min(max_cell_value - 1, current_row + 1)
         elif 'LEFT' == current_action: next_column = max(0, current_column - 1)
@@ -118,3 +117,69 @@ class GridWorldEnv():
         else:
             return current_state
     
+    ###############################################################################################
+    def compute_reward(self, state):
+        """
+            Compute Reward
+
+            Computes the reward for arriving at a given state based on ditches and the end goal
+            :param state: State we have arrived in as cell co-ordinate
+            :return: returns the reward corresponding to the state
+        """
+        reward = 0
+        reward += self.turn_penalty
+        if state in self.ditches: reward += self.ditch_penalty
+        if state in self.terminal_state: reward += self.win_reward
+        
+        return reward
+    
+    ###############################################################################################
+    def reset(self):
+        """
+            Reset
+
+            Resets map, reward, states to original settings.
+            :return: returns fresh entry state for agent
+        """
+        self.accumulated_reward = 0
+        self.current_state = self.start_state
+        self.total_turns = 0
+        self.is_game_end = False
+        
+        return self.current_state 
+
+    def step(self, action):
+        """
+            Step
+
+            Makes the agent take the suggested action
+
+            :param action: Action to be taken by the agent
+            :return: returns a tuple of (next_state, instant_reward, done_flag, info) 
+        """
+        if self.is_game_end:
+            raise('Game is Over Exception')
+        if action not in self.actionspace:
+            raise('Invalid Action Exception')
+        
+        self.current_state = self.next_state(self.current_state, action)
+        observed_state = self.current_state
+        reward = self.compute_reward(observed_state)
+        self.total_turns += 1
+        
+        if self.mode == 'DEBUG':
+            print("Obs:{}, Reward:{}, Done:{}, Total Turns:{}"
+            .format(observed_state, reward, self.is_game_end, self.total_turns))
+        
+        return observed_state, reward, self.is_game_end, self.total_turns
+
+if __name__ == '__main__':
+    """
+        Main Function to test the code
+    """
+    env = GridWorldEnv(mode='DEBUG')
+    env.reset()
+    env.step(1)
+    env.step(3)
+    env.step(2)
+    env.step(0)
