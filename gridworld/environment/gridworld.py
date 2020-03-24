@@ -51,6 +51,7 @@ class GridWorldEnv():
         if self.mode == "debug":
             #Debug code
             print("DUBGGING")
+        
     def create_statespace(self):
         """
             Create Statespace
@@ -182,4 +183,3 @@ if __name__ == '__main__':
     env.step(1)
     env.step(3)
     env.step(2)
-    env.step(0)
