@@ -80,17 +80,31 @@ class ValueIteration:
             """
             self.reset_episode()
             observed_state = self.env.reset()
-            running = True
-            while running:
+            done = False
+            while not done:
                 action = self.Policy[self.env.state_dict[observed_state]]
-                self.env.step(action)
+                new_state, reward, done, debug = self.env.step(action)
+                self.total_reward += reward
+                self.total_steps += 1
+                observed_state = new_state
+            return self.total_reward
 
 
-        def evaluate_policy(self):
+        def evaluate_policy(self, n_episodes=1000):
             """
                 Evaluates the policy
-                :return: returns a tuple of mean, standard deviation and mode of rewards.
+                :return: returns a tuple of mean, standard deviation, median and range of rewards.
             """
+            episode_scores = []
+            for e, episode in enumerate(n_episodes):
+                episode_scores.append(self.run_episode())
+            mean = np.mean(episode_scores)
+            median = np.median(episode_scores)
+            standard_deviation = np.std(episode_scores)
+            range = np.max(episode_scores) - np.min(episode_scores)
+            
+            return mean, standard_deviation, median, range
+
         
         def extract_policy(self):
             """
@@ -98,10 +112,18 @@ class ValueIteration:
             """
             self.Policy = np.argmax(self.Q, axis = 1)
         
-        def solve_mdp(self):
-            SystemError
+        def solve_mdp(self, n_episodes=100):
+            """
+            """
+            self.iterate_value()
+            self.extract_policy()
+            return self.evaluate_policy(n_episodes)
 
         if __name__ == '__main__':
             """
                 Main Function 
             """
+            valueIteration = ValueIteration(env = GridWorldEnv, mode = "DEBUG")
+            mean_reward, std, median, range = valueIteration.solve_mdp()
+            print("This is the mean {}, median {}, range, {} and standard deviation {}"
+            .format(mean_reward, median, range, std))
